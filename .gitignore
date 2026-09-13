@@ -427,3 +427,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+## Secretos específicos del proyecto (no subir credenciales reales)
+appsettings.Development.json
+appsettings.Production.json
+**/secrets.json
