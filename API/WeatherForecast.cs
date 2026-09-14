@@ -1,4 +1,4 @@
-namespace APIBomberman
+namespace API
 {
     public class WeatherForecast
     {

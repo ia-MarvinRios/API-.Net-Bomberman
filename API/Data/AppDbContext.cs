@@ -1,0 +1,103 @@
+﻿using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using API.Models;
+
+namespace API.Data
+{
+    public class AppDbContext : DbContext
+    {
+        // Constructor
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+        // -- Sets --
+        public DbSet<User> Users { get; set; }
+        public DbSet<Profile> Profiles { get; set; }
+        public DbSet<PlayerSettings> PlayerSettings { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<PlayerStats> PlayerStats { get; set; }
+        public DbSet<Match> Matches { get; set; }
+        public DbSet<MatchPlayer> MatchPlayers { get; set; }
+        public DbSet<Skin> Skins { get; set; }
+        public DbSet<GameConfig> GameConfig { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // -- User --
+            modelBuilder.Entity<User>(entity => 
+            {
+                entity.HasIndex(u => u.Email).IsUnique();
+                entity.HasIndex(u => u.Username).IsUnique();
+                entity.Property(u => u.Email).HasMaxLength(255);
+                entity.Property(u => u.Username).HasMaxLength(16);
+                entity.Property(u => u.PasswordHash).HasMaxLength(255);
+            });
+
+            // -- Profile --
+            modelBuilder.Entity<Profile>(entity => 
+            {
+                entity.HasKey(p => p.UserId);
+                entity.HasOne(p => p.User)
+                      .WithOne(u => u.Profile)
+                      .HasForeignKey<Profile>(p => p.UserId);
+
+                // Save List<strings> as JSON
+                entity.Property(p => p.UnlockedSkinIds)
+                      .HasConversion(
+                            v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                            v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()
+                      );
+            });
+
+            // -- PlayerSettings --
+            modelBuilder.Entity<PlayerSettings>(entity =>
+            {
+                entity.HasKey(s => s.UserId);
+                entity.HasOne(s => s.User)
+                      .WithOne(u => u.PlayerSettings)
+                      .HasForeignKey<PlayerSettings>(s => s.UserId);
+            });
+
+            // -- PlayerStats --
+            modelBuilder.Entity<PlayerStats>(entity =>
+            {
+                entity.HasKey(s => s.UserId);
+                entity.HasOne(s => s.User)
+                      .WithOne(u => u.PlayerStats)
+                      .HasForeignKey<PlayerStats>(s => s.UserId);
+            });
+
+            // -- RefreshToken --
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.HasOne(rt => rt.User)
+                      .WithMany(u => u.RefreshTokens)
+                      .HasForeignKey(rt => rt.UserId);
+            });
+
+            // -- Match --
+            modelBuilder.Entity<Match>(entity =>
+            {
+                entity.HasKey(m => m.MatchId); // Client generates this, no AI (Auto Incremental)
+            });
+
+            // -- MatchPlayer --
+            modelBuilder.Entity<MatchPlayer>(entity =>
+            {
+                entity.HasOne(mp => mp.Match)
+                      .WithMany(m => m.Players)
+                      .HasForeignKey(mp => mp.MatchId);
+            });
+
+            // -- GameConfig --
+            modelBuilder.Entity<GameConfig>(entity =>
+            {
+                entity.Property(g => g.EnabledMapIds)
+                      .HasConversion(
+                          v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                          v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null)
+                      );
+            });
+        }
+
+    }
+}
