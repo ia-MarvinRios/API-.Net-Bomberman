@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using API.Data;
 using API.Middleware;
+using API.Configuration;
+using API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,12 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
 );
+
+// -- JwtConfig --
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+
+// -- Register Token Service --
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 var app = builder.Build();
 
