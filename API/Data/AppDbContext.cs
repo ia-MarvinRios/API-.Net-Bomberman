@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using API.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Text.Json;
-using API.Models;
 
 namespace API.Data
 {
@@ -33,19 +34,23 @@ namespace API.Data
             });
 
             // -- Profile --
-            modelBuilder.Entity<Profile>(entity => 
+            modelBuilder.Entity<Profile>(entity =>
             {
                 entity.HasKey(p => p.UserId);
                 entity.HasOne(p => p.User)
                       .WithOne(u => u.Profile)
                       .HasForeignKey<Profile>(p => p.UserId);
 
-                // Save List<strings> as JSON
                 entity.Property(p => p.UnlockedSkinIds)
                       .HasConversion(
-                            v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                            v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()
-                      );
+                          v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                          v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()
+                      )
+                      .Metadata.SetValueComparer(new ValueComparer<List<string>>(
+                          (a, b) => a!.SequenceEqual(b!),
+                          v => v.Aggregate(0, (hash, s) => HashCode.Combine(hash, s.GetHashCode())),
+                          v => v.ToList()       
+                      ));
             });
 
             // -- PlayerSettings --
@@ -95,7 +100,12 @@ namespace API.Data
                       .HasConversion(
                           v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                           v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null)
-                      );
+                      )
+                      .Metadata.SetValueComparer(new ValueComparer<List<string>?>(
+                          (a, b) => (a == null && b == null) || (a != null && b != null && a.SequenceEqual(b)),
+                          v => v == null ? 0 : v.Aggregate(0, (hash, s) => HashCode.Combine(hash, s.GetHashCode())),
+                          v => v == null ? null : v.ToList()
+                      ));
             });
 
             // --- Seed: game init config (singleton row) ---
