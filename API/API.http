@@ -4,6 +4,52 @@ GET {{API_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+### Registro
+# @name register
+POST {{API_HostAddress}}/auth/register
+Content-Type: application/json
+{
+  "email": "alvaro@test.com",
+  "username": "alvaro123",
+  "password": "secret123"
+}
 
-### Simular flujo completo de tokens (access + refresh + rotacion + reuso + logout)
-POST {{API_HostAddress}}/api/tokentest/simulate
+### Login
+# @name login
+POST {{API_HostAddress}}/auth/login
+Content-Type: application/json
+{
+  "emailOrUsername": "alvaro123",
+  "password": "secret123"
+}
+
+### Refresh (usa el refreshToken del login)
+# @name refresh
+POST {{API_HostAddress}}/auth/refresh
+Content-Type: application/json
+{
+  "refreshToken": "{{login.response.body.$.refreshToken}}"
+}
+
+### Logout (requiere el accessToken del refresh, y revoca el refreshToken del refresh)
+POST {{API_HostAddress}}/auth/logout
+Content-Type: application/json
+Authorization: Bearer {{refresh.response.body.$.accessToken}}
+{
+  "refreshToken": "{{refresh.response.body.$.refreshToken}}"
+}
+
+### Prueba: reusar el refreshToken original del login (ya rotado) -> debe dar 401 AUTH_TOKEN_EXPIRED
+POST {{API_HostAddress}}/auth/refresh
+Content-Type: application/json
+{
+  "refreshToken": "{{login.response.body.$.refreshToken}}"
+}
+
+### Prueba: logout sin token -> debe dar 401 AUTH_UNAUTHORIZED con el formato correcto
+POST {{API_HostAddress}}/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "cualquier-cosa"
+}
