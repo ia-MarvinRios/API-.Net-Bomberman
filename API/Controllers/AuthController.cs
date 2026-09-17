@@ -6,6 +6,7 @@ using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace API.Controllers
 {
@@ -22,6 +23,7 @@ namespace API.Controllers
             _tokenService = tokenService;
         }
 
+        [EnableRateLimiting("AuthPolicy")]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
@@ -72,6 +74,7 @@ namespace API.Controllers
             return StatusCode(StatusCodes.Status201Created, response);
         }
 
+        [EnableRateLimiting("AuthPolicy")]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -96,6 +99,7 @@ namespace API.Controllers
             return Ok(response);
         }
 
+        [EnableRateLimiting("AuthPolicy")]
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
         {

@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Scalar.AspNetCore;
 using System.Text;
 using System.Text.Json;
@@ -117,6 +119,41 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// -- Rate Limit --
+builder.Services.AddRateLimiter(options =>
+{
+    // Uniform response on limit reached
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "application/json";
+
+        var response = new
+        {
+            error = new
+            {
+                code = ErrorCodes.RateLimited,
+                message = "Too many requests. Please try again later."
+            }
+        };
+
+        await context.HttpContext.Response.WriteAsync(
+            JsonSerializer.Serialize(response), cancellationToken);
+    };
+
+    // 10 requests per minute per IP
+    options.AddPolicy("AuthPolicy", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0, // no queue. Reject on limit reached
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+            }));
+});
+
 builder.Services.AddAuthorization();
 
 // -- Register Token Service --
@@ -135,6 +172,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 
