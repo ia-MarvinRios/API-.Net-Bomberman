@@ -97,6 +97,39 @@ namespace API.Data
                           v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null)
                       );
             });
+
+            // --- Seed: game init config (singleton row) ---
+            modelBuilder.Entity<GameConfig>().HasData(new GameConfig
+            {
+                Id = 1,
+                ConfigVersion = 1,
+                EnabledMapIds = null, // null = all maps unlocked
+                MinClientVersion = "0.1.0",
+                BalanceFuseSeconds = 2.5f,
+                BalanceBaseSpeed = 4f,
+                BalanceBaseRange = 1,
+                BalanceBaseMaxBombs = 1,
+                BalanceMatchDurationSeconds = 180,
+                BalanceWallCooldownSeconds = 8f,
+                BalanceWallDurationSeconds = 4f,
+                BalanceBombRequestTimeoutSeconds = 2f,
+                BalanceTimedFuseSeconds = 5f,
+                BalanceRemoteMaxSeconds = 15f,
+                BalanceThrowDistanceCells = 3,
+                BalanceThrowDurationSeconds = 0.5f,
+                BalanceMaxRange = 8,
+                BalanceMaxBombs = 6,
+                BalanceMaxSpeedLevel = 4
+            });
+
+            // --- Seed: available skins ---
+            modelBuilder.Entity<Skin>().HasData(
+                new Skin { Id = "default", DisplayName = "Default", EnabledInSelector = true, SortOrder = 0 },
+                new Skin { Id = "skin_01", DisplayName = "Skin 01", EnabledInSelector = true, SortOrder = 1 },
+                new Skin { Id = "skin_02", DisplayName = "Skin 02", EnabledInSelector = true, SortOrder = 2 },
+                new Skin { Id = "skin_03", DisplayName = "Skin 03", EnabledInSelector = true, SortOrder = 3 }
+            );
+
         }
 
     }
