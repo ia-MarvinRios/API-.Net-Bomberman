@@ -161,6 +161,19 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 
 var app = builder.Build();
 
+// -- APPLY MIGRATIONS AND EXIT --
+if (args.Contains("--migrate"))
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    Console.WriteLine("Applying migrations...");
+    db.Database.Migrate();
+    Console.WriteLine("Done!");
+
+    return; // Exit
+}
+
 // -- Middleware --
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
