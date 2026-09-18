@@ -69,7 +69,7 @@ API/
 ### 1. Clonar y restaurar
 
 ```bash
-git clone <https://github.com/ia-MarvinRios/API-.Net-Bomberman.git>
+git clone https://github.com/ia-MarvinRios/API-.Net-Bomberman.git
 cd API
 dotnet restore
 ```
