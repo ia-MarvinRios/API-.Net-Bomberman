@@ -191,8 +191,4 @@ El proyecto se probó exhaustivamente en Postman, cubriendo:
 - Formato de error uniforme en toda la API, sin filtrar detalles internos en errores `500`
 - HTTPS habilitado mediante `UseHttpsRedirection`
 
-## 👤 Autor
-
-**Raydell Ríos**
-
 </div>
