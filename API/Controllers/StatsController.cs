@@ -5,9 +5,11 @@ using API.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using API.DTOs.Common;
 
 namespace API.Controllers
 {
+    /// <summary>Estadísticas del jugador autenticado.</summary>
     [Route("api/v1/stats")]
     [ApiController]
     [Authorize]
@@ -20,6 +22,10 @@ namespace API.Controllers
             _context = context;
         }
 
+        /// <summary>Devuelve las estadísticas acumuladas.</summary>
+        /// <remarks>`winRate` es `wins / matchesPlayed` (entre 0 y 1), o 0 si no hay partidas.</remarks>
+        /// <response code="200">Estadísticas del jugador.</response>
+        [ProducesResponseType<StatsResponse>(StatusCodes.Status200OK)]
         [HttpGet("me")]
         public async Task<IActionResult> GetMe()
         {

@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using API.DTOs.Common;
 
 namespace API.Controllers
 {
+    /// <summary>Reporte e historial de partidas.</summary>
     [Route("api/v1/matches")]
     [ApiController]
     [Authorize]
@@ -22,6 +24,25 @@ namespace API.Controllers
             _context = context;
         }
 
+        /// <summary>Reporta el resultado de una partida terminada.</summary>
+        /// <remarks>
+        /// Lo envía **una sola vez el Master Client** de la sala. Reglas:
+        ///
+        /// - **Autorización:** el usuario del token debe estar entre los `players`.
+        /// - **Idempotencia:** si el `matchId` ya existe, responde 200 con `{}` sin reaplicar nada.
+        /// - **XP por jugador:** `50 + kills × 20 + 100 si ganó`.
+        /// - **Victoria:** `placement = 1` cuenta como victoria solo si hubo más de un jugador. `placement = 0` es empate.
+        /// - Los jugadores cuyo `userId` no exista se ignoran para estadísticas y XP, sin invalidar el reporte.
+        /// </remarks>
+        /// <param name="request">Datos completos de la partida.</param>
+        /// <response code="201">Partida registrada y resultados aplicados.</response>
+        /// <response code="200">La partida ya estaba registrada (idempotente). No se aplicó nada nuevo.</response>
+        /// <response code="400">`VALIDATION_FAILED`: el cuerpo no cumple el formato.</response>
+        /// <response code="403">`AUTH_FORBIDDEN`: el remitente no está entre los jugadores de la partida.</response>
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType<ErrorResponse>(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType<ErrorResponse>(StatusCodes.Status403Forbidden)]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateMatchRequest request)
         {
@@ -104,6 +125,10 @@ namespace API.Controllers
             return StatusCode(StatusCodes.Status201Created, new { });
         }
 
+        /// <summary>Devuelve el historial de partidas del jugador, de la más reciente a la más antigua.</summary>
+        /// <param name="limit">Cantidad máxima de partidas (1-100, por defecto 20). Los valores fuera de rango se ajustan, no son error.</param>
+        /// <response code="200">Lista de partidas.</response>
+        [ProducesResponseType<MatchesListResponse>(StatusCodes.Status200OK)]
         [HttpGet("me")]
         public async Task<IActionResult> GetMyMatches([FromQuery] int limit = 20)
         {

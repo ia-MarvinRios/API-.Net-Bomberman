@@ -3,12 +3,12 @@ using API.Data;
 using API.Exceptions;
 using API.Middleware;
 using API.Services;
+using API.Documentation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.RateLimiting;
 using Scalar.AspNetCore;
 using System.Text;
 using System.Text.Json;
@@ -41,7 +41,12 @@ builder.Services.AddControllers()
         };
     });
 
-builder.Services.AddOpenApi();
+// -- API Documentation
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer<ApiDocumentTransformer>();
+    options.AddOperationTransformer<AuthOperationTransformer>();
+});
 
 // -- Database Connection --
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

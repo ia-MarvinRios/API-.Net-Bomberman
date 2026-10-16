@@ -3,9 +3,11 @@ using API.DTOs.GameConfig;
 using API.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using API.DTOs.Common;
 
 namespace API.Controllers
 {
+    /// <summary>Configuración remota del juego.</summary>
     [Route("api/v1/game-config")]
     [ApiController]
     // No auth. Client can request without a session
@@ -18,6 +20,15 @@ namespace API.Controllers
             _context = context;
         }
 
+        /// <summary>Devuelve la configuración vigente del juego.</summary>
+        /// <remarks>
+        /// No requiere autenticación, así el cliente puede pedirla antes de iniciar sesión.
+        /// `enabledMapIds = null` significa que todos los mapas están habilitados.
+        /// El cliente debe comparar su versión con `minClientVersion` y bloquear el juego si es menor.
+        /// `configVersion` cambia cada vez que se publica una edición y sirve para invalidar caché local.
+        /// </remarks>
+        /// <response code="200">Configuración vigente.</response>
+        [ProducesResponseType<GameConfigResponse>(StatusCodes.Status200OK)]
         [HttpGet]
         public async Task<IActionResult> Get()
         {
