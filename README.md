@@ -9,6 +9,8 @@
 ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
 ![Entity Framework Core](https://img.shields.io/badge/EF%20Core-9.0-512BD4?style=for-the-badge)
+![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1-6BA539?style=for-the-badge&logo=openapiinitiative&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger%20UI-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
 ![Postman](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=postman&logoColor=white)
 
 </div>
@@ -29,7 +31,8 @@ Implementada siguiendo estrictamente las especificaciones `API-CONTRACT.md` y `A
 - **MySQL** — Base de datos relacional (XAMPP en desarrollo local)
 - **JWT Bearer** — Autenticación con access tokens (1h) + refresh tokens opacos rotativos (30 días)
 - **BCrypt.Net-Next** — Hashing de contraseñas
-- **Scalar.AspNetCore** — Documentación interactiva de la API (reemplazo moderno de Swagger UI)
+- **Microsoft.AspNetCore.OpenApi** — Generación nativa del documento OpenAPI
+- **Scalar.AspNetCore** y **Swagger UI** — Dos visores interactivos para la misma documentación
 - **Rate Limiting nativo de .NET** — Protección contra fuerza bruta en endpoints de autenticación
 
 ## ✨ Características
@@ -39,6 +42,7 @@ Implementada siguiendo estrictamente las especificaciones `API-CONTRACT.md` y `A
 - 📊 Estadísticas acumuladas y sistema de experiencia/nivel
 - 🎮 Reporte de partidas idempotente, con validación de pertenencia
 - 🛠️ Configuración remota del balance del juego, versionada
+- 📚 Documentación OpenAPI completa: descripciones, códigos de respuesta, esquemas de error y autenticación Bearer
 - 🚦 Formato de error uniforme en toda la API: `{ "error": { "code", "message" } }`
 - 🛡️ Rate limiting, contraseñas hasheadas, y JWT con eventos personalizados
 
@@ -49,10 +53,12 @@ API/
 ├── Configuration/       # JwtSettings
 ├── Controllers/         # Auth, Profile, Stats, Matches, GameConfig, Health
 ├── Data/                # AppDbContext
+├── Documentation/       # Transformers de OpenAPI (info general y seguridad Bearer)
 ├── DTOs/                # Contratos de entrada/salida por dominio
 ├── Exceptions/          # ApiException, ErrorCodes, excepciones especificas
 ├── Helpers/             # ControllerExtensions, LevelCalculator
 ├── Middleware/          # ExceptionHandlingMiddleware
+├── Migrations/          # Historial de migraciones de EF Core
 ├── Models/              # Entidades: User, Profile, PlayerSettings, RefreshToken,
 │                         # PlayerStats, Match, MatchPlayer, Skin, GameConfig
 ├── Services/            # ITokenService / TokenService
@@ -70,7 +76,7 @@ API/
 
 ```bash
 git clone https://github.com/ia-MarvinRios/API-.Net-Bomberman.git
-cd API
+cd API-.Net-Bomberman/API
 dotnet restore
 ```
 
@@ -110,11 +116,51 @@ Esto crea la base de datos `derbymetals` con las 9 tablas necesarias, incluyendo
 dotnet run
 ```
 
-La API queda disponible en las URLs indicadas en consola. La documentación interactiva (Scalar) está en:
+La API queda disponible en las URLs indicadas en consola. La documentación interactiva está descrita en la siguiente sección.
 
+## 📚 Documentación de la API
+
+La API genera su propio documento **OpenAPI** y lo expone en tres formatos. Reemplaza `<puerto>` por el HTTPS que indique la consola al arrancar.
+
+| Visor | URL | Uso |
+|---|---|---|
+| 🟣 **Scalar** | `https://localhost:<puerto>/scalar/v1` | Documentación interactiva moderna |
+| 🟢 **Swagger UI** | `https://localhost:<puerto>/swagger` | Interfaz clásica de Swagger |
+| 📄 **OpenAPI JSON** | `https://localhost:<puerto>/openapi/v1.json` | Documento crudo, importable en Postman o [editor.swagger.io](https://editor.swagger.io) |
+
+Cada endpoint incluye su descripción, reglas de negocio, códigos de respuesta posibles (con el esquema de error uniforme) y ejemplos de los campos de entrada.
+
+### 🔑 Probar endpoints protegidos desde la documentación
+
+1. Ejecuta `POST /api/v1/auth/login` (o `register`) y copia el `accessToken` de la respuesta.
+2. Pulsa **Authorize** (Swagger UI) o abre la sección de autenticación **Bearer** (Scalar).
+3. Pega el token. Los endpoints con candado 🔒 ya lo enviarán automáticamente.
+
+> 💡 Solo los endpoints que requieren autenticación muestran candado. `register`, `login`, `refresh`, `game-config` y `health` son públicos.
+
+### ⚠️ Disponibilidad por entorno
+
+La documentación **solo se expone con `ASPNETCORE_ENVIRONMENT=Development`**, que es lo que usan `dotnet run` y Visual Studio. El `.exe` publicado arranca en `Production` por defecto, así que no la incluye. Para verla desde el ejecutable publicado:
+
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+.\API.exe
 ```
-https://localhost:<puerto>/scalar/v1
+
+### ✍️ Documentar un endpoint nuevo
+
+La documentación se alimenta de los comentarios XML (`///`) y de los atributos `[ProducesResponseType]` de cada acción. Al agregar un endpoint, sigue el mismo patrón que los existentes:
+
+```csharp
+/// <summary>Descripción corta de lo que hace.</summary>
+/// <remarks>Reglas de negocio y detalles relevantes.</remarks>
+/// <response code="200">Qué significa este resultado.</response>
+/// <response code="400">`VALIDATION_FAILED`: cuándo ocurre.</response>
+[ProducesResponseType<MiRespuesta>(StatusCodes.Status200OK)]
+[ProducesResponseType<ErrorResponse>(StatusCodes.Status400BadRequest)]
 ```
+
+Los comentarios se procesan al **compilar**, así que recompila para ver los cambios.
 
 ## 📡 Endpoints
 
@@ -190,5 +236,4 @@ El proyecto se probó exhaustivamente en Postman, cubriendo:
 - Rate limiting en `register`, `login` y `refresh`
 - Formato de error uniforme en toda la API, sin filtrar detalles internos en errores `500`
 - HTTPS habilitado mediante `UseHttpsRedirection`
-
-</div>
+- Documentación de la API expuesta únicamente en el entorno `Development`
