@@ -52,7 +52,7 @@ builder.Services.AddOpenApi(options =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 21)))
 );
 
 // -- JwtConfig --
@@ -183,7 +183,10 @@ if (args.Contains("--migrate"))
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+bool exposeDocs = app.Environment.IsDevelopment()
+                  || app.Configuration.GetValue<bool>("ApiDocs:Enabled");
+
+if (exposeDocs)
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
