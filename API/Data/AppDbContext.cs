@@ -134,10 +134,12 @@ namespace API.Data
 
             // --- Seed: available skins ---
             modelBuilder.Entity<Skin>().HasData(
-                new Skin { Id = "default", DisplayName = "Default", EnabledInSelector = true, SortOrder = 0 },
-                new Skin { Id = "skin_01", DisplayName = "Skin 01", EnabledInSelector = true, SortOrder = 1 },
-                new Skin { Id = "skin_02", DisplayName = "Skin 02", EnabledInSelector = true, SortOrder = 2 },
-                new Skin { Id = "skin_03", DisplayName = "Skin 03", EnabledInSelector = true, SortOrder = 3 }
+                new Skin { Id = "default", DisplayName = "Default", EnabledInSelector = false, SortOrder = 0 },
+                new Skin { Id = "skin_01", DisplayName = "Skin 01", EnabledInSelector = false, SortOrder = 1 },
+                new Skin { Id = "skin_02", DisplayName = "Skin 02", EnabledInSelector = false, SortOrder = 2 },
+                new Skin { Id = "skin_03", DisplayName = "Skin 03", EnabledInSelector = false, SortOrder = 3 },
+                new Skin { Id = "maria", DisplayName = "Maria", EnabledInSelector = true, SortOrder = 4 },
+                new Skin { Id = "zombie", DisplayName = "Zombie", EnabledInSelector = true, SortOrder = 5 }
             );
 
         }

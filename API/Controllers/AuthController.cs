@@ -71,8 +71,8 @@ namespace API.Controllers
             {
                 UserId = user.Id,
                 DisplayName = user.Username,
-                SelectedSkinId = "default",
-                UnlockedSkinIds = new List<string> { "default" },
+                SelectedSkinId = "zombie",
+                UnlockedSkinIds = new List<string> { "zombie", "maria" },
                 Xp = 0
             };
 
