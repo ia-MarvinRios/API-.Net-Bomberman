@@ -315,29 +315,43 @@ namespace API.Migrations
                         {
                             Id = "default",
                             DisplayName = "Default",
-                            EnabledInSelector = true,
+                            EnabledInSelector = false,
                             SortOrder = 0
                         },
                         new
                         {
                             Id = "skin_01",
                             DisplayName = "Skin 01",
-                            EnabledInSelector = true,
+                            EnabledInSelector = false,
                             SortOrder = 1
                         },
                         new
                         {
                             Id = "skin_02",
                             DisplayName = "Skin 02",
-                            EnabledInSelector = true,
+                            EnabledInSelector = false,
                             SortOrder = 2
                         },
                         new
                         {
                             Id = "skin_03",
                             DisplayName = "Skin 03",
-                            EnabledInSelector = true,
+                            EnabledInSelector = false,
                             SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = "maria",
+                            DisplayName = "Maria",
+                            EnabledInSelector = true,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = "zombie",
+                            DisplayName = "Zombie",
+                            EnabledInSelector = true,
+                            SortOrder = 5
                         });
                 });
 
